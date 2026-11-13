@@ -13,6 +13,10 @@ py -3.14 main.py --help
 py -3.14 test_assignment.py
 ```
 
+## Handout
+
+See [AL07_Memoization_Caching_and_Assignment_Syntax.md](AL07_Memoization_Caching_and_Assignment_Syntax.md) for the Week 5 memoization, caching, and assignment-syntax handout.
+
 ## Work Notes
 
 - Payment finding: With coins 1, 4, and 6 for amount 8, largest-first returns 6 + 1 + 1, while the reference returns 4 + 4. Greedy is not always minimum-coin.
