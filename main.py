@@ -1,4 +1,4 @@
-"""Optional AL07 scaffold: Tuesday payment choices, Thursday saved answers."""
+"""AL07 greedy-payment and memoized Fibonacci investigations."""
 
 from investigation_support import validate_change
 from investigation_display import run
@@ -6,30 +6,29 @@ from investigation_display import run
 ENABLE_MEMOIZATION = True
 
 
-# TUESDAY — Implement the local choice; the reference solver is supplied.
 def greedy_change(denominations, target):
-    """Return an exact payment using the largest fitting coins first"""
+    """Return a largest-first exact payment, or None if greedy gets stuck."""
     coins = validate_change(denominations, target)
-    chosen = []
+    payment = []
     remaining = target
+
     for coin in coins:
-        while remaining >= coin:
-            chosen.append(coin)
+        while coin <= remaining:
+            payment.append(coin)
             remaining -= coin
 
-    if remaining == 0:
-        return chosen
-    return None
+    if remaining:
+        return None
+    return payment
 
-# THURSDAY — The recurrence and counters are supplied; add lookup and storage.
+
 def calculate_cached(n, cache, counts):
-    """Calculate Fibonacci while saving and reusing previous answers."""
+    """Return F(n), reusing saved answers while counting every call and hit."""
     counts["calls"] += 1
-
     if n in cache:
         counts["hits"] += 1
         return cache[n]
-    
+
     if n < 2:
         result = n
     else:
@@ -38,12 +37,11 @@ def calculate_cached(n, cache, counts):
         result = previous + earlier
 
     cache[n] = result
-    
     return result
 
 
 def main():
-    """Run the AL07 investigation"""
+    """Present the payment cases and the optional memoization comparison."""
     run(greedy_change, calculate_cached, ENABLE_MEMOIZATION)
 
 

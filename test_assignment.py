@@ -1,132 +1,105 @@
-"""Optional AL07 test starting point; expand it with your own expectations."""
+"""Focused regression checks for the AL07 investigations."""
 
-from main import greedy_change, calculate_cached
-from investigation_support import exhaustive_change, cached_fibonacci, uncached_fibonacci
+from main import calculate_cached, greedy_change
+from investigation_support import (
+    cached_fibonacci,
+    exhaustive_change,
+    uncached_fibonacci,
+)
 
 
 def test_tuesday():
-    """Check greedy change with counterexamples, boundraries, and input preservation"""
-    # 1 Test - A Shorter exact payment exists
-    assert greedy_change([1, 4, 6], 8) == [6, 1, 1]
-    assert exhaustive_change([1, 4, 6], 8) == [4, 4]
+    """Check exactness, greedy limitations, input handling, and immutability."""
+    coins = [1, 4, 6]
+    original = coins.copy()
+    greedy = greedy_change(coins, 8)
+    reference = exhaustive_change(coins, 8)
+    assert greedy == [6, 1, 1]
+    assert reference == [4, 4]
+    assert sum(greedy) == sum(reference) == 8
+    assert len(greedy) > len(reference)
+    assert coins == original
 
-    # 2 Test - Greedy gets stuck, even though an exact payment exists
     assert greedy_change([4, 6], 8) is None
     assert exhaustive_change([4, 6], 8) == [4, 4]
-
-    # 3 Test - No exact payment exists
     assert greedy_change([4, 6], 7) is None
     assert exhaustive_change([4, 6], 7) is None
 
-    # 4 Test - Both methods agree
-    assert greedy_change([1, 5, 10], 12) == [10, 1, 1]
-    assert exhaustive_change([1, 5, 10], 12) == [10, 1, 1]
-
-    # 5 Test - A target of zero needs no coins
+    agreed_greedy = greedy_change([1, 5, 10], 12)
+    agreed_reference = exhaustive_change([1, 5, 10], 12)
+    assert sum(agreed_greedy) == sum(agreed_reference) == 12
+    assert len(agreed_greedy) == len(agreed_reference) == 3
     assert greedy_change([1, 5, 10], 0) == []
-    assert exhaustive_change([1, 5, 10], 0) == []
 
-    # 6 Test - Unsorted denominations should still work
-    assert greedy_change([1, 10, 5], 12) == [10, 1, 1]
+    unsorted_duplicates = [4, 1, 4, 6]
+    unchanged = unsorted_duplicates.copy()
+    assert greedy_change(unsorted_duplicates, 8) == [6, 1, 1]
+    assert unsorted_duplicates == unchanged
 
-    # 7 Test - Duplicate denominations should still work
-    assert greedy_change([1, 5, 10, 5, 1], 12) == [10, 1, 1]
-
-    # 8  The original input list should not be changed
-    coins = [1, 4, 6]
-    original_coins = coins.copy()
-    greedy_change(coins, 8)
-    assert coins == original_coins
-
-    # 9 Test - Invalid targets shoudl raise ValueError
-    try:
-        greedy_change([1, 5, 10], -1)
-        assert False
-    except ValueError:
-        pass
-    try:
-        greedy_change([1, 5, 10], 13)
-        assert False
-    except ValueError:
-        pass
-
-    # 10 - Invalid denomination lists should raise ValueError
-    try:
-        greedy_change([], 8)
-        assert False
-    except ValueError:
-        pass
-    try: 
-        greedy_change([1, 0, 5], 8)
-        assert False
-    except ValueError:
-        pass
-    try:
-        greedy_change([1, -4, 6], 8)
-        assert False
-    except ValueError:
-        pass
+    invalid_cases = [
+        ([], 0),
+        ([1], True),
+        ([True], 1),
+        ([0], 1),
+        ([-1, 2], 1),
+        ([1], 13),
+        ([1], 1.5),
+        ((1, 2), 2),
+    ]
+    for denominations, target in invalid_cases:
+        try:
+            greedy_change(denominations, target)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                f"Expected ValueError for {denominations!r}, target {target!r}"
+            )
 
 
 def test_thursday():
-    """Check saved answers and bounded counts against hand-checkable inputs."""
-
-    # Check Fibonacci 5 and its memoization counts.
+    """Check recurrence results, call accounting, storage, and fresh runs."""
+    plain_result, plain_calls = uncached_fibonacci(5)
     result, calls, hits, cache = cached_fibonacci(5, calculate_cached)
-
-    assert result == 5
+    assert plain_result == result == 5
+    assert plain_calls == 15
     assert calls == 9
     assert hits == 3
-    assert len(cache) == 6
+    assert cache == {0: 0, 1: 1, 2: 1, 3: 2, 4: 3, 5: 5}
+    assert calls == hits + len(cache)
 
-    # Check the base case n = 0
-    result, calls, hits, cache = cached_fibonacci(0, calculate_cached)
-    assert result == 0
-    assert calls == 1
-    assert hits == 0
-    assert len(cache) == 1
+    assert uncached_fibonacci(0) == (0, 1)
+    assert uncached_fibonacci(1) == (1, 1)
+    assert cached_fibonacci(0, calculate_cached) == (0, 1, 0, {0: 0})
+    assert cached_fibonacci(1, calculate_cached) == (1, 1, 0, {1: 1})
+    assert uncached_fibonacci(10)[0] == 55
+    assert cached_fibonacci(10, calculate_cached)[0] == 55
 
-    # Check the base case n = 1
-    result, calls, hits, cache = cached_fibonacci(1, calculate_cached)
-    assert result == 1
-    assert calls == 1
-    assert hits == 0
-    assert len(cache) == 1
-
-    # check another known Fibonacci answer
-    result, calls, hits, cache = cached_fibonacci(8, calculate_cached)
-    assert result == 21
-
-    # Check that repeated runs start fresh.
     first_run = cached_fibonacci(5, calculate_cached)
     second_run = cached_fibonacci(5, calculate_cached)
-    assert first_run[0] == second_run[0]
-    assert first_run[1] == second_run[1]
-    assert first_run[2] == second_run[2]
+    assert first_run[:3] == second_run[:3] == (5, 9, 3)
     assert first_run[3] == second_run[3]
+    assert first_run[3] is not second_run[3]
 
-    # Compare the cached and uncached Fibonacci answers.
-    cached_result, calls, hits, cache = cached_fibonacci(5, calculate_cached)
-    uncached_result, uncached_calls =uncached_fibonacci(5)
-    assert cached_result == uncached_result
-    assert calls < uncached_calls
+    counts = {"calls": 0, "hits": 0}
+    zero_cache = {0: 0}
+    assert calculate_cached(0, zero_cache, counts) == 0
+    assert counts == {"calls": 1, "hits": 1}
 
-    # Invalid n below the allowed range shoudl raise ValueError.
-    try: 
-        cached_fibonacci(-1, calculate_cached)
-        assert False
-    except ValueError:
-        pass
-
-    # invalid n above the allowed range shoudl raise VlaueError.
-    try:
-        cached_fibonacci(21, calculate_cached)
-        assert False
-    except ValueError:
-        pass
+    for invalid_n in (-1, 21, True, 1.5):
+        for calculate in (
+            lambda value: uncached_fibonacci(value),
+            lambda value: cached_fibonacci(value, calculate_cached),
+        ):
+            try:
+                calculate(invalid_n)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"Expected ValueError for n={invalid_n!r}")
 
 
 if __name__ == "__main__":
     test_tuesday()
     test_thursday()
-    print("AL07 Checks Passed.")
+    print("All AL07 checks passed.")

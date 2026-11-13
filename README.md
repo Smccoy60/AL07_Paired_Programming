@@ -1,28 +1,27 @@
 # AL07: Greedy Claims and Memoization Evidence
 
-Name: Sarah Imhoff
-Partner(s): Mark VanDenBeckens
-My contribution: Mark and I used paried programmign for both Tuesday and Thursday.  We switched roles about every 20 minutes while workgn on teh programming and test assignments so that we both had time coding and reviewign/testing the work. 
+Name: Mark  
+Partner(s): [add assigned partner name(s)]  
+My contribution: Implemented the greedy-payment and memoized Fibonacci helpers, added focused tests, and checked the supplied case reports.
 
 ## Run
 
 ```powershell
 py -3.14 main.py
 py -3.14 main.py --n 5
+py -3.14 main.py --help
 py -3.14 test_assignment.py
 ```
 
-The --n option is used after enabling Thursday's stage.
-
 ## Work Notes
 
-- Payment finding: With coin values [1, 4, 6] and a target of 8, the greedy method chose 6 + 1 + 1, which used 3 coins. The reference method found 4 + 4, which only used 2 coins. THis showed us that choosing the largest coin first does not always produce the fewest coins.
-- Saved-answer finding: For Fibonacci 5, the memoized version returend the same answer of 5 while reusing answers that had already been clauclated.  It used 9 function calls, had 3 cache hits, and stored 6 distinct inputs. This showed us how memoization reduces repeated work, but it requires additional storage for the saved results.
-- Pair question/decision: During paired programming, we discussed whether a greedy result of None meant tha tno exact payment was possible. Test [4, 6] with a target of 8 showed that greedy gets stuck after choosing 6, even though 4 + 4 is a valid solution. THis helped us decide that we needed the reference method to tell the difference between greedy getting stuck and no solution actually existing.
+- Payment finding: With coins 1, 4, and 6 for amount 8, largest-first returns 6 + 1 + 1, while the reference returns 4 + 4. Greedy is not always minimum-coin.
+- Saved-answer finding: At n=5, both methods return 5; the uncached recurrence makes 15 calls, while memoization makes 9 calls (3 hits) and stores 6 inputs. The cache uses extra space to avoid repeated recursive work in this run.
+- Question/decision: Does greedy getting stuck prove that no exact payment exists? No; for coins 4 and 6 with amount 8, the reference finds 4 + 4, so the two outcomes must be reported separately.
 
 ## Assistance
 
-We used the supplied AL07 starter files, coin cases, validation and reference solver, investigation display, assignmetn directions, and class slides.
+The supplied `coin_cases.py`, `reference_solver.py`, `investigation_support.py`, `investigation_display.py`, and `console_style.py` provide the cases, bounded reference solver, validation/wrappers, reporting, and terminal styling. Copilot SDK in VS Code helped implement the two required helpers and focused checks. I checked the case results, the n=5 call/hit/cache counts, edge cases, and invalid inputs by running `test_assignment.py`.
 
 ## Instructor Comments
 

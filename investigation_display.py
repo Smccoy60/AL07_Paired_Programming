@@ -2,7 +2,7 @@
 
 import argparse
 from coin_cases import CASES
-from console_style import print_color
+from console_style import color_text, print_color
 from investigation_support import exhaustive_change, uncached_fibonacci, cached_fibonacci, validate_n
 
 
@@ -20,28 +20,32 @@ def describe_payment(payment):
 
 def show_change_cases(greedy_change):
     """Show usable payment choices and distinguish three different outcomes."""
+    print()
     print_color("EXACT PAYMENT PLANNER", "heading")
-    print("Goal: pay the exact amount using as few coins as possible.")
-    print("Unlimited coins of each listed value are available.")
-    for case in CASES:
-        print_color("\n" + case["label"], "heading")
+    print("  Goal: exact payment with as few coins as possible.")
+    print("  Assumption: unlimited coins of each listed value.\n")
+    for index, case in enumerate(CASES):
+        if index:
+            print_color("  " + "-" * 52, "code")
+        print_color(f"  CASE {index + 1}  |  {case['label']}", "heading")
         values = []
         for coin in case["coins"]:
             values.append(str(coin))
-        print("Available coin values: " + ", ".join(values))
-        print(f"Amount to pay: {case['target']}")
+        print(f"    Coins available : {', '.join(values)}")
+        print(f"    Target amount   : {case['target']}")
         greedy = greedy_change(case["coins"], case["target"])
         best = exhaustive_change(case["coins"], case["target"])
-        print("Largest-first choice: " + describe_payment(greedy))
-        print("Fewest-coin reference: " + describe_payment(best))
+        print("    Largest-first   : " + color_text(describe_payment(greedy), "code"))
+        print("    Minimum reference: " + color_text(describe_payment(best), "code"))
         if best is None:
-            print_color("No exact payment exists with these coins.", "caution")
+            print_color("    RESULT: No exact payment exists with these coins.", "caution")
         elif greedy is None:
-            print_color("An exact payment exists, but largest-first missed it.", "caution")
+            print_color("    RESULT: A payment exists, but largest-first missed it.", "caution")
         elif len(greedy) > len(best):
-            print_color("Largest-first pays exactly, but uses extra coins.", "caution")
+            print_color("    RESULT: Exact, but largest-first uses extra coins.", "caution")
         else:
-            print_color("Largest-first matches the minimum count for this case.", "success")
+            print_color("    RESULT: Largest-first matches the minimum count.", "success")
+        print()
 
 
 def read_n():
@@ -60,15 +64,19 @@ def show_memoization(n, calculate_cached):
     """Separate the unchanged recurrence answer from optional teaching evidence."""
     result, plain_calls = uncached_fibonacci(n)
     cached_result, calls, hits, cache = cached_fibonacci(n, calculate_cached)
-    print_color("\nRECURRENCE CHECK", "heading")
-    print(f"Fibonacci value at position {n}: {result}")
-    print(f"Value using saved answers: {cached_result}")
-    print_color("How the calculation reused work", "heading")
-    print(f"Function calls without saved answers: {plain_calls}")
-    print(f"Function calls with saved answers: {calls}")
-    print(f"Calls that found an answer already saved: {hits}")
-    print(f"Distinct inputs saved: {len(cache)}")
-    print("Both runs start fresh. Calls include hits; these are counts, not timings.")
+    print_color("MEMOIZATION CHECK", "heading")
+    print(f"  Input n              : {n}")
+    print(f"  Fibonacci result     : {color_text(str(result), 'success')}")
+    print(f"  Result with cache    : {color_text(str(cached_result), 'success')}")
+    print_color("\n  WORK COMPARISON", "heading")
+    print(f"  Calls without cache  : {plain_calls}")
+    print(f"  Calls with cache     : {color_text(str(calls), 'success')}")
+    print(f"  Cache hits           : {hits} (included in calls)")
+    print(f"  Distinct inputs saved: {len(cache)}")
+    print_color(
+        "\n  Both runs start fresh. Counts show work, not elapsed time.",
+        "code",
+    )
 
 
 def run(greedy_change, calculate_cached, enable_memoization):
